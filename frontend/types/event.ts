@@ -37,3 +37,30 @@ export interface Event {
   tags: string[];
   isRegistered?: boolean;
 }
+
+export interface EventRequestDTO {
+  title: string;
+  description: string;
+  startTime: string; 
+  endTime: string;
+  categoryId: number; // Backend pede número
+  locationId: number; // Backend pede número
+  workloadHours: number;
+  maxCapacity: number;
+  onlineLink?: string;
+}
+
+export interface EventResponseDTO {
+  id: number;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  workloadHours: number;
+  maxCapacity: number;
+  onlineLink?: string;
+  // O backend pode retornar o objeto completo ou apenas o ID/Nome
+  // Ajuste conforme o JSON que seu backend retorna
+  category?: { id: number; name: string } | string; 
+  location?: { id: number; name: string } | string;
+}
