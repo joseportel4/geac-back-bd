@@ -109,7 +109,8 @@ INSERT INTO public.users (id, full_name, email, password_hash, user_type, create
                                                                                           ('286c2d18-9814-4d88-a55d-14bacaefcf49', 'student5', 'student5@test.com', '$2a$10$kWOVCbnEdBKwoirx8IvxxuBC1r5TS8O8/ekLd1JkAKlVvW6rDLajy', 'STUDENT', NOW()),
                                                                                           ('073b9076-2317-4511-a9c3-535654e75363', 'professor1', 'professor1@test.com', '$2a$10$UAH/nCUUYJ6Cklr79GLUVuY91SBHZh.JmyP/Id6NdnTBvhG6m5Vma', 'PROFESSOR', NOW()),
                                                                                           ('be4999bf-6d31-4414-a0a6-ae61d53a6387', 'professor2', 'professor2@test.com', '$2a$10$MOljMoo4PYuoz4yzBJK8K.tW/2iBtWFcFUkZv8d5RuGfIMikJITDu', 'PROFESSOR', NOW()),
-                                                                                          ('54307ac7-8117-42c3-abc2-a74b112979c3', 'professor3', 'professor3@test.com', '$2a$10$q0K2zMKAZ2w0XRTektFvcO1TiQ1IKFTSp.biRbH6W9.uL5IcFDrgG', 'PROFESSOR', NOW());
+                                                                                          ('54307ac7-8117-42c3-abc2-a74b112979c3', 'professor3', 'professor3@test.com', '$2a$10$q0K2zMKAZ2w0XRTektFvcO1TiQ1IKFTSp.biRbH6W9.uL5IcFDrgG', 'PROFESSOR', NOW()),
+                                                                                          ('e6137fdc-6fc2-4776-8616-9e238c1b48a7', 'admin', 'admin@admin.com', '$2a$10$/h/iWZLAhU4PfZmTew1nl.6xfNP4ymHEu5zSWXGhGIsce41x7p146', 'ADMIN', NOW());
 
 
 INSERT INTO categories (name, description)
