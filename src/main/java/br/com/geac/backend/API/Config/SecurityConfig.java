@@ -29,17 +29,26 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/events/**").authenticated()
-                    .requestMatchers(HttpMethod.POST, "/events").hasRole("PROFESSOR")
+                                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/categories", "/locations", "/requirements", "/organizers", "/organizers/**").authenticated()
+                                //eventos: qualquer autenticado passa pela rota. a validação se e membro da Org ou Admin será feita no Service.
+                                .requestMatchers(HttpMethod.GET, "/events/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/events").authenticated()
 
-                        .requestMatchers(HttpMethod.POST, "/organizers", "/organizers/**").authenticated()
+                                //acoes restritas ao ADMIN
+                                .requestMatchers(HttpMethod.GET, "/organizer-requests/pending").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/organizer-requests/*/approve").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/organizer-requests/*/reject").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/organizers", "/organizers/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/organizers/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/organizers/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.PUT, "/organizers/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/organizers/**").authenticated()
-                        .anyRequest().authenticated())
+                                //solicitacoes: usuario comum pode apenas CRIAR a solicitação
+                                .requestMatchers(HttpMethod.POST, "/organizer-requests").authenticated()
+
+                                .requestMatchers(HttpMethod.GET, "/categories", "/locations", "/requirements", "/organizers", "/organizers/**").authenticated()
+
+                                .anyRequest().authenticated())
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout((logout) -> logout
                     .logoutUrl("/auth/logout")
