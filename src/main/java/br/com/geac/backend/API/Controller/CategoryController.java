@@ -35,11 +35,11 @@ public class CategoryController {
     }
 
     @PatchMapping("{id}")
-    public ResponseEntity<CategoryResponseDTO> updateCategory(@Valid @RequestBody CategoryPatchRequestDTO dto, @PathVariable Integer id) {
+    public ResponseEntity<CategoryResponseDTO> updateCategory(@Valid @RequestBody CategoryPatchRequestDTO dto, @PathVariable @Positive Integer id) {
         return ResponseEntity.ok(service.updateCategory(id, dto));
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<Void> delete(@PathVariable @Positive Integer id) {
         service.deleteCategory(id);
         return ResponseEntity.noContent().build();
     }
