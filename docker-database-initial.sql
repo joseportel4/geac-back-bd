@@ -32,6 +32,11 @@ CREATE TABLE users
     created_at    TIMESTAMP        DEFAULT NOW()
 );
 
+CREATE TABLE notifications
+(
+    id SERIAL PRIMARY KEY
+    user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+)
 CREATE TABLE requirements
 (
     id          SERIAL PRIMARY KEY,

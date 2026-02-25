@@ -46,10 +46,10 @@ public class RegistrationService {
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado."));
 
         // 2. Valida se quem está pedindo a lista é o organizador do evento
-        User loggedUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!event.getOrganizer().getId().equals(loggedUser.getId())) {
-            throw new AccessDeniedException("Acesso negado: Você não pode ver a lista de presença de um evento que não organiza.");
-        }
+//        User loggedUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        if (!event.getOrganizer().getId().equals(loggedUser.getId())) {
+//            throw new AccessDeniedException("Acesso negado: Você não pode ver a lista de presença de um evento que não organiza.");
+//        }
 
         // 3. Busca as inscrições e converte para DTO
         List<Registration> registrations = registrationRepository.findByEventId(eventId);

@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -124,5 +125,9 @@ public class EventService {
     private Event getEventByIdOrThrow(UUID id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado com o ID: " + id));
+    }
+
+    public List<Event> getEventsBetween(LocalDateTime now, LocalDateTime eventDate) {
+        return eventRepository.findAllByStartTimeBetween(now,eventDate);
     }
 }
