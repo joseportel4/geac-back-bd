@@ -1,6 +1,8 @@
 package br.com.geac.backend.Aplication.DTOs.Reponse;
 
-public record LocationResponseDTO(
+import br.com.geac.backend.Domain.Enums.Campus;
+
+public record LocationResponseDTO (
         Integer id,
         String name,
         String street,
@@ -9,6 +11,7 @@ public record LocationResponseDTO(
         String city,
         String state,
         String zipCode,
+        Campus campus,
         String referencePoint,
         Integer capacity) {
 }
