@@ -15,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import br.com.geac.backend.Domain.Enums.EventStatus;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -31,6 +32,7 @@ public class EventService {
     private final SpeakerRepository speakerRepository;
     private final OrganizerMemberRepository organizerMemberRepository;
     private final OrganizerRepository organizerRepository;
+    private final RegistrationRepository registrationRepository;
     // private final UserRepository userRepository;
 
 
@@ -62,24 +64,18 @@ public class EventService {
             throw new BadRequestException("erro inesperado de validation em algum lugar pois naod everia chegar aqwui");
         }
 
-        Event event = new Event();  //algum heroi ajusta omapper
-        event.setTitle(dto.title());
-        event.setDescription(dto.description());
-        event.setOnlineLink(dto.onlineLink());
-        event.setStartTime(dto.startTime());
-        event.setEndTime(dto.endTime());
-        event.setWorkloadHours(dto.workloadHours());
-        event.setMaxCapacity(dto.maxCapacity());
-        event.setStatus("ACTIVE");
+        Event event = eventMapper.toEntity(dto);  //algum heroi ajusta omapper
+
         event.setOrganizer(organization);
         event.setCategory(category);
         event.setLocation(location);
         event.setRequirements(resolveRequirements(dto.requirementIds()));
         event.setTags(resolveTags(dto.tags()));
         event.setSpeakers(resolveSpeakers(dto.speakers()));
+
         Event saved = eventRepository.save(event);
-        //TODO: setar countRegistration e incrementa-la nas inscricoes, ta faltando na entity
-        return eventMapper.toResponseDTO(saved);
+
+        return eventMapper.toResponseDTO(saved, false);
     }
 
     private Set<EventRequirement> resolveRequirements(Collection<Integer> requirementIds) {
@@ -100,13 +96,15 @@ public class EventService {
     @Transactional(readOnly = true)
     public List<EventResponseDTO> getAllEvents() {
         List<Event> events = eventRepository.findAll();
-        return events.stream().map(eventMapper::toResponseDTO).toList();
+        return events.stream()
+                .map(event -> eventMapper.toResponseDTO(event, checkUserRegistration(event.getId())))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public EventResponseDTO getEventById(UUID id) {
         Event event = getEventByIdOrThrow(id);
-        return eventMapper.toResponseDTO(event);
+        return eventMapper.toResponseDTO(event, checkUserRegistration(event.getId()));
     }
 
     @Transactional
@@ -141,8 +139,22 @@ public class EventService {
             }
             event.setOrganizer(organization);
         }
-        return eventMapper.toResponseDTO(eventRepository.save(event));
+        return eventMapper.toResponseDTO(eventRepository.save(event), checkUserRegistration(event.getId()));
 
+    }
+
+    private Boolean checkUserRegistration(UUID eventId) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return false;
+        }
+
+        try {
+            User user = (User) authentication.getPrincipal();
+            return registrationRepository.existsByUserIdAndEventId(user.getId(), eventId);
+        } catch (ClassCastException e) {
+            return false; // Prevenção caso o principal não seja do tipo User
+        }
     }
 
     @Transactional

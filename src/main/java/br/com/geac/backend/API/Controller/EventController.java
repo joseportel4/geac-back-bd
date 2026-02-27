@@ -21,7 +21,7 @@ public class EventController {
     private final EventService eventService;
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole= ('ADMIN') or ('ORGANIZER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     public ResponseEntity<EventResponseDTO> createEvent(@RequestBody @Valid EventRequestDTO dto) {
         EventResponseDTO response = eventService.createEvent(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -40,14 +40,14 @@ public class EventController {
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole= ('ADMIN') or ('ORGANIZER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     public ResponseEntity<EventResponseDTO> updateEvent(@PathVariable UUID id, @RequestBody @Valid EventPatchRequestDTO dto) {
         EventResponseDTO updatedEvent = eventService.patchEvent(id, dto);
         return ResponseEntity.ok(updatedEvent);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole= ('ADMIN') or ('ORGANIZER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZER')")
     public ResponseEntity<Void> deleteEvent(@PathVariable UUID id) {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();

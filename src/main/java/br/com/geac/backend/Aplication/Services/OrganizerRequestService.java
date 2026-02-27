@@ -2,17 +2,11 @@ package br.com.geac.backend.Aplication.Services;
 
 import br.com.geac.backend.Aplication.DTOs.Reponse.PendingRequestResponseDTO;
 import br.com.geac.backend.Aplication.DTOs.Request.CreateOrganizerRequestDTO;
-import br.com.geac.backend.Domain.Entities.Organizer;
-import br.com.geac.backend.Domain.Entities.OrganizerMember;
-import br.com.geac.backend.Domain.Entities.OrganizerRequest;
-import br.com.geac.backend.Domain.Entities.User;
+import br.com.geac.backend.Domain.Entities.*;
 import br.com.geac.backend.Domain.Enums.RequestStatus;
 import br.com.geac.backend.Domain.Enums.Role;
 import br.com.geac.backend.Domain.Exceptions.ConflictException;
-import br.com.geac.backend.Infrastructure.Repositories.OrganizerMemberRepository;
-import br.com.geac.backend.Infrastructure.Repositories.OrganizerRepository;
-import br.com.geac.backend.Infrastructure.Repositories.OrganizerRequestRepository;
-import br.com.geac.backend.Infrastructure.Repositories.UserRepository;
+import br.com.geac.backend.Infrastructure.Repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +22,8 @@ public class OrganizerRequestService {
     private final OrganizerMemberRepository memberRepository;
     private final UserRepository userRepository;
     private final OrganizerRepository organizerRepository;
+    private final EventRepository eventRepository; //TODO testar notificação
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public List<PendingRequestResponseDTO> getPendingRequests() {
@@ -64,6 +60,17 @@ public class OrganizerRequestService {
                 user.setRole(Role.ORGANIZER);
                 userRepository.save(user);
             }
+
+            Notification notif = new Notification();
+            notif.setUser(user);
+            notif.setTitle("Solicitação Aprovada!");
+            notif.setMessage("Parabéns! Sua solicitação para participar da organização '" + request.getOrganizer().getName() + "' foi aceita. Você agora é um organizador.");
+            notif.setType("CANCEL");
+            notif.setRead(false);
+            notif.setCreatedAt(LocalDateTime.now());
+            notif.setEvent(eventRepository.findAll().getFirst());
+            notificationService.notify(notif);
+
         }
     }
 
@@ -98,6 +105,22 @@ public class OrganizerRequestService {
         request.setStatus(RequestStatus.PENDING);
 
         requestRepository.save(request);
+
+        List<User> admins = userRepository.findAllByRole(Role.ADMIN);
+        for (User admin : admins) {
+            Notification adminNotif = new Notification();
+            adminNotif.setUser(admin);
+            adminNotif.setTitle("Nova Solicitação de Organização");
+            adminNotif.setMessage("O usuário " + user.getName() + " solicitou entrada na organização '" + organizer.getName() + "'. Acesse o painel para aprovar ou rejeitar.");
+            adminNotif.setType("CANCEL");
+            adminNotif.setRead(false);
+            adminNotif.setCreatedAt(LocalDateTime.now());
+//            adminNotif.setEvent(new Event());
+            adminNotif.setEvent(eventRepository.findAll().getFirst());
+            notificationService.notify(adminNotif);
+
+        }
+
     }
 
     private OrganizerRequest findRequestOrThrow(Integer id) {

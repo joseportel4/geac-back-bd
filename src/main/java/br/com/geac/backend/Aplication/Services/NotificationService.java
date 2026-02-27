@@ -44,6 +44,7 @@ public class NotificationService {
 
     public void notify(Notification notification) {
             notificationRepository.save(notification);
+            String eventTitle = notification.getEvent() != null ? notification.getEvent().getTitle() : "Notificação de Sistema";
             log.info("Notificacao realizada com sucesso!"+notification.getEvent().getTitle() );
             log.info("Notificacao realizada com sucesso!"+notification.getUser().getEmail() );
     }

@@ -3,6 +3,7 @@ package br.com.geac.backend.Aplication.Mappers;
 import br.com.geac.backend.Aplication.DTOs.Reponse.EventResponseDTO;
 import br.com.geac.backend.Aplication.DTOs.Reponse.RequirementsResponseDTO;
 import br.com.geac.backend.Aplication.DTOs.Request.EventPatchRequestDTO;
+import br.com.geac.backend.Aplication.DTOs.Request.EventRequestDTO;
 import br.com.geac.backend.Domain.Entities.Event;
 import br.com.geac.backend.Domain.Entities.EventRequirement;
 import br.com.geac.backend.Domain.Entities.Speaker;
@@ -15,12 +16,13 @@ import java.util.Set;
 @Mapper(componentModel = "spring", uses = {LocationMapper.class})
 public interface EventMapper {
 
-    @Mapping(target = "categoryId", source = "category.id")
-    @Mapping(target = "categoryName", source = "category.name")
-    @Mapping(target = "organizerName", source = "organizer.name")
-    @Mapping(target = "organizerEmail", source = "organizer.contactEmail")
+    @Mapping(target = "categoryId", source = "event.category.id")
+    @Mapping(target = "categoryName", source = "event.category.name")
+    @Mapping(target = "organizerName", source = "event.organizer.name")
+    @Mapping(target = "organizerEmail", source = "event.organizer.contactEmail")
     @Mapping(target = "speakers", source = "event", qualifiedByName = "mapSpeakers")
-    EventResponseDTO toResponseDTO(Event event);
+    @Mapping(target = "isRegistered", source = "isRegistered")
+    EventResponseDTO toResponseDTO(Event event, Boolean isRegistered);
 
     RequirementsResponseDTO toRequirementDTO(EventRequirement eventRequirement);
 
@@ -38,6 +40,19 @@ public interface EventMapper {
     }
 
 
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "organizer", ignore = true)
+    @Mapping(target = "category", ignore = true)
+    @Mapping(target = "location", ignore = true)
+    @Mapping(target = "requirements", ignore = true)
+    @Mapping(target = "tags", ignore = true)
+    @Mapping(target = "speakers", ignore = true)
+    @Mapping(target = "status", constant = "ACTIVE")
+    @Mapping(target = "registeredCount", constant = "0")
+    @Mapping(target = "createdAt", ignore = true)
+    Event toEntity(EventRequestDTO dto);
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "tags", ignore = true)
     @Mapping(target = "speakers", ignore = true)
@@ -45,6 +60,10 @@ public interface EventMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "requirements", ignore = true)
     @Mapping(target = "location", ignore = true)
+    @Mapping(target = "organizer", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "registeredCount", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     void updateEventFromDto(EventPatchRequestDTO dto, @MappingTarget Event entity);
 
 }

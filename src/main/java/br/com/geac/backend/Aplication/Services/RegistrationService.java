@@ -14,6 +14,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import br.com.geac.backend.Infrastructure.Repositories.OrganizerMemberRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +28,7 @@ public class RegistrationService {
     private final RegistrationRepository registrationRepository;
     private final EventRepository eventRepository;
     private final NotificationService notificationService;
+    private final OrganizerMemberRepository organizerMemberRepository;
 
     @Transactional
     public void markAttendanceInBulk(UUID eventId, List<UUID> userIds, boolean attended) {
@@ -50,11 +52,7 @@ public class RegistrationService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado."));
 
-        // 2. Valida se quem está pedindo a lista é o organizador do evento
-//        User loggedUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//        if (!event.getOrganizer().getId().equals(loggedUser.getId())) {
-//            throw new AccessDeniedException("Acesso negado: Você não pode ver a lista de presença de um evento que não organiza.");
-//        }
+        validateOrganizerAccess(event);
 
         // 3. Busca as inscrições e converte para DTO
         List<Registration> registrations = registrationRepository.findByEventId(eventId);
@@ -84,14 +82,16 @@ public class RegistrationService {
             throw new ConflictException("Você já está inscrito neste evento.");
         }
 
-        if (event.getOrganizer().getId().equals(loggedUser.getId())) {
-            throw new ConflictException("Você não pode se inscrever no evento que você mesmo está organizando.");
+        if (organizerMemberRepository.existsByOrganizerIdAndUserId(event.getOrganizer().getId(), loggedUser.getId())) {
+            throw new ConflictException("Você não pode se inscrever no evento que sua organização está promovendo.");
         }
 
-        long currentRegistrations = registrationRepository.countByEventId(eventId);
-        if (currentRegistrations >= event.getMaxCapacity()) {
+        if (event.getRegisteredCount() >= event.getMaxCapacity()) {
             throw new ConflictException("Desculpe, este evento já atingiu a capacidade máxima de " + event.getMaxCapacity() + " participantes.");
         }
+
+        event.setRegisteredCount(event.getRegisteredCount() + 1);
+        eventRepository.save(event);
 
         Registration registration = new Registration();
         registration.setUser(loggedUser);
@@ -100,10 +100,11 @@ public class RegistrationService {
 
         Notification notification = new Notification();
         notification.setUser(loggedUser);
-        notification.setMessage("Congrats, your registration was sucessfull");
-        notification.setRead(false);
-        notification.setType("SUBSCRIBE");
         notification.setEvent(event);
+        notification.setTitle("Inscrição Confirmada");
+        notification.setMessage("Parabéns! Sua inscrição no evento '" + event.getTitle() + "' foi realizada com sucesso.");
+        notification.setType("SUBSCRIBE");
+        notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
 
         notificationService.notify(notification);
@@ -125,21 +126,43 @@ public class RegistrationService {
             throw new ConflictException("Não é possível cancelar a inscrição pois sua presença já foi validada no evento.");
         }
 
-        // 4. Deleta a inscrição do banco (liberando a vaga automaticamente)
+        // 4. DECREMENTA O CONTADOR E SALVA (Devolve a vaga)
+        Event event = registration.getEvent();
+        if (event.getRegisteredCount() > 0) {
+            event.setRegisteredCount(event.getRegisteredCount() - 1);
+            eventRepository.save(event);
+        }
 
-//        Notification notification = new Notification(); TODO
-//        notification.setUser(loggedUser);
-//        notification.setMessage("Congrats, your registration was sucessfull");
-//        notification.setRead(false);
-//        notification.setType("SUBSCRIBE");
-//        notification.setEvent(event);
-//        notification.setCreatedAt(LocalDateTime.now());
-//
-//        notificationService.notify(notification);
+        Notification notification = new Notification();
+        notification.setUser(loggedUser);
+        notification.setEvent(event);
+        notification.setTitle("Inscrição Cancelada");
+        notification.setMessage("Sua inscrição no evento '" + event.getTitle() + "' foi cancelada com sucesso. Uma vaga foi liberada.");
+        notification.setType("UNSUBSCRIBE");
+        notification.setRead(false);
+        notification.setCreatedAt(LocalDateTime.now());
+
+        notificationService.notify(notification);
+
         registrationRepository.delete(registration);
     }
 
     public void saveAll(List<Registration> registrations) {
         registrationRepository.saveAll(registrations);
+    }
+
+    private void validateOrganizerAccess(Event event) {
+        User loggedUser = getLoggedUser();
+
+        boolean isAdmin = loggedUser.getRole() == br.com.geac.backend.Domain.Enums.Role.ADMIN;
+        boolean isMember = organizerMemberRepository.existsByOrganizerIdAndUserId(event.getOrganizer().getId(), loggedUser.getId());
+
+        if (!isAdmin && !isMember) {
+            throw new AccessDeniedException("Acesso negado: Você não é membro da organização responsável por este evento.");
+        }
+    }
+
+    private User getLoggedUser() {
+        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 }

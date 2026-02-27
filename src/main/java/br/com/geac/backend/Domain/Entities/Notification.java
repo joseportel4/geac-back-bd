@@ -17,7 +17,7 @@ public class Notification {
 
     @JoinColumn(name = "user_id", nullable = false) @ManyToOne(fetch = FetchType.LAZY)
     private User user;
-    @JoinColumn(name = "event_id", nullable = false) @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id") @ManyToOne(fetch = FetchType.LAZY)
     private Event event;
     @Column(name = "status")
     private boolean isRead = false;

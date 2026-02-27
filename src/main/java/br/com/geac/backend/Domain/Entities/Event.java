@@ -1,5 +1,8 @@
 package br.com.geac.backend.Domain.Entities;
 
+import br.com.geac.backend.Domain.Enums.EventStatus;
+import br.com.geac.backend.Domain.Enums.EventStatusConverter;
+import org.hibernate.annotations.ColumnDefault;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,8 +54,13 @@ public class Event {
     @Column(name = "max_capacity", nullable = false)
     private Integer maxCapacity;
 
-    @Column(length = 20)
-    private String status;
+    @Column(length = 20, nullable = false)
+    @Convert(converter = EventStatusConverter.class)
+    private EventStatus status = EventStatus.ACTIVE;
+
+    @ColumnDefault("0")
+    @Column(name = "registered_count", nullable = false)
+    private Integer registeredCount = 0;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
