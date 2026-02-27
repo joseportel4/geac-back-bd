@@ -6,23 +6,28 @@ import br.com.geac.backend.Aplication.Services.RegistrationService;
 import br.com.geac.backend.Domain.Entities.Event;
 import br.com.geac.backend.Domain.Entities.Registration;
 import br.com.geac.backend.Domain.Entities.User;
+import br.com.geac.backend.Domain.Enums.EventStatus;
+import br.com.geac.backend.Infrastructure.Repositories.EventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class EventAlertScheduler {
 
     private final EventService eventService;
+    private final EventRepository eventRepository;
     private final RegistrationService registrationService;
     private final NotificationService notificationService;
 
-    @Scheduled(cron = "0 */1 * * * *") //TODO: mudar pra 1h quando estiver pronto, de 1 em 1 pra testar
+    @Scheduled(cron = "0 */1 * * * *") //TODO: mudar pra 1h quando estiver pronto, de 1 em 1min pra testar
     public void checkCloseEvents() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime eventTimeCheck = now.plusHours(24);
@@ -40,10 +45,29 @@ public class EventAlertScheduler {
                     .toList();
 
             notificationService.notifyAll(users, event);
-            registrationsByEvent.forEach(registration ->  registration.setNotified(true));
+            registrationsByEvent.forEach(registration -> registration.setNotified(true));
             registrationService.saveAll(registrationsByEvent);
 
 
         }
+
+
     }
+
+    @Scheduled(cron = "0 */1 * * * *")
+    @Transactional
+    public void updateEventStatus() {  //dava pra fazer direto nno banco mas deixa ai, n vai pesar acho
+
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> endEvents = eventService.getPastEvents(now);
+
+        if(!endEvents.isEmpty()) {
+            endEvents.forEach(event -> event.setStatus(EventStatus.COMPLETED));
+            eventRepository.saveAll(endEvents);
+            log.info("Updated {} to completed status",endEvents.size());
+        }else {
+            log.info("No events found to update");
+        }
+    }
+
 }

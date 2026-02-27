@@ -5,6 +5,7 @@ import br.com.geac.backend.Aplication.DTOs.Request.EventPatchRequestDTO;
 import br.com.geac.backend.Aplication.DTOs.Request.EventRequestDTO;
 import br.com.geac.backend.Aplication.Mappers.EventMapper;
 import br.com.geac.backend.Domain.Entities.*;
+import br.com.geac.backend.Domain.Enums.EventStatus;
 import br.com.geac.backend.Domain.Enums.Role;
 import br.com.geac.backend.Domain.Exceptions.*;
 import br.com.geac.backend.Infrastructure.Repositories.*;
@@ -171,5 +172,9 @@ public class EventService {
 
     public List<Event> getEventsBetween(LocalDateTime now, LocalDateTime eventDate) {
         return eventRepository.findAllByStartTimeBetween(now,eventDate);
+    }
+
+    public List<Event> getPastEvents(LocalDateTime now) {
+        return eventRepository.findAllByStartTimeBeforeAndStatusNot(LocalDateTime.now().minusMinutes(1), EventStatus.COMPLETED);
     }
 }
