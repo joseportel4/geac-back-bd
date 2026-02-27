@@ -27,7 +27,7 @@ public class EventAlertScheduler {
     private final RegistrationService registrationService;
     private final NotificationService notificationService;
 
-    @Scheduled(cron = "0 */1 * * * *") //TODO: mudar pra 1h quando estiver pronto, de 1 em 1min pra testar
+    @Scheduled(cron = "0 0 * * * *")
     public void checkCloseEvents() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime eventTimeCheck = now.plusHours(24);
@@ -54,7 +54,7 @@ public class EventAlertScheduler {
 
     }
 
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "0 */30 * * * *")
     @Transactional
     public void updateEventStatus() {  //dava pra fazer direto nno banco mas deixa ai, n vai pesar acho
 
