@@ -35,13 +35,12 @@ public record EventRequestDTO(
         Integer categoryId,
 
         @NotNull(message = "A lista de requisitos do evento é obrigatório")
-        List<Integer> requirementIds,
+        Set<Integer> requirementIds,
 
         @NotNull
         @Size(min = 1, message = "O evento deve ter pelo menos uma tag")
         Set<Integer> tags,
 
-        @NotNull
         //pode ser nulo, pois o evento pode ser online
         Integer locationId,
 
