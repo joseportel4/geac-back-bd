@@ -43,7 +43,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         .status(HttpStatus.BAD_REQUEST.value())
                         .timestamp(LocalDateTime.now())
                         .details(e.getClass().getSimpleName())
-                        .message("Bad Request: Alguma coias deu errado")
+                        .message(e.getMessage())
                         .build(), HttpStatus.BAD_REQUEST
         );
     }
@@ -71,7 +71,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         .status(HttpStatus.CONFLICT.value())
                         .timestamp(LocalDateTime.now())
                         .details(e.getClass().getSimpleName())
-                        .message("Bad Request: dados relacionados não podem ser excluídos ou modificados.")
+                        .message(e.getMessage())
                         .build(), HttpStatus.CONFLICT
         );
     }

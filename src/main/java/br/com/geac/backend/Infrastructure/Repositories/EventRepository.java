@@ -1,6 +1,7 @@
 package br.com.geac.backend.Infrastructure.Repositories;
 
 import br.com.geac.backend.Domain.Entities.Event;
+import br.com.geac.backend.Domain.Enums.EventStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +12,7 @@ import java.util.UUID;
 @Repository
 public interface EventRepository extends JpaRepository<Event, UUID> {
     List<Event> findAllByStartTimeBetween(LocalDateTime startTimeAfter, LocalDateTime startTimeBefore);
+
+
+    List<Event> findAllByStartTimeBeforeAndStatusNot(LocalDateTime startTimeBefore, EventStatus status);
 }
