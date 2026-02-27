@@ -62,6 +62,10 @@ public class EventService {
             throw new BadRequestException("Erro inesperado, não deveria ter chegado aqui pelo fluxo normal.");
         }
 
+        if (eventRepository.existsByTitleIgnoreCaseAndOrganizerIdAndStartTime(dto.title(), organization.getId(), dto.startTime())) {
+            throw new EventAlreadyExistsException("Um evento com este título e horário já foi cadastrado por esta organização.");
+        }
+
         Event event = eventMapper.toEntity(dto);
         event.setOrganizer(organization);
         event.setCategory(category);
@@ -106,6 +110,7 @@ public class EventService {
     public EventResponseDTO patchEvent(UUID id, EventPatchRequestDTO dto) {
 
         Event event = getEventByIdOrThrow(id);
+        validateEventOwnership(event);
         eventMapper.updateEventFromDto(dto, event);
 
         if (dto.speakers() != null) event.setSpeakers(resolveSpeakers(dto.speakers()));
@@ -133,6 +138,14 @@ public class EventService {
             }
             event.setOrganizer(organization);
         }
+        String checkTitle = dto.title() != null ? dto.title() : event.getTitle();
+        LocalDateTime checkStartTime = dto.startTime() != null ? dto.startTime() : event.getStartTime();
+
+        if (eventRepository.existsByTitleIgnoreCaseAndOrganizerIdAndStartTime(checkTitle, event.getOrganizer().getId(), checkStartTime)) {
+            if (!checkTitle.equalsIgnoreCase(event.getTitle()) || !checkStartTime.equals(event.getStartTime())) {
+                throw new EventAlreadyExistsException("Já existe outro evento com este título e horário nesta organização.");
+            }
+        }
         return eventMapper.toResponseDTO(eventRepository.save(event), getUserRegistrationContext(event.getId()));
 
     }
@@ -155,9 +168,20 @@ public class EventService {
         return new UserRegistrationContextResponseDTO(false, null, false);
     }
 
+    private void validateEventOwnership(Event event) {
+        User loggedUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (loggedUser.getRole() == Role.ADMIN) return; // Admin pode tudo
+
+        boolean isMember = organizerMemberRepository.existsByOrganizerIdAndUserId(event.getOrganizer().getId(), loggedUser.getId());
+        if (!isMember) {
+            throw new AccessDeniedException("Você não pertence à organização dona deste evento.");
+        }
+    }
+
     @Transactional
     public void deleteEvent(UUID id) {
         Event event = getEventByIdOrThrow(id);
+        validateEventOwnership(event);
         eventRepository.delete(event);
     }
 
