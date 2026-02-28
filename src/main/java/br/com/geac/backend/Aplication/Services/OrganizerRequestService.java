@@ -64,7 +64,7 @@ public class OrganizerRequestService {
             Notification notif = new Notification();
             notif.setUser(user);
             notif.setTitle("Solicitação Aprovada!");
-            notif.setMessage("Parabéns! Sua solicitação para participar da organização '" + request.getOrganizer().getName() + "' foi aceita. Você agora é um organizador.");
+            notif.setMessage("Parabéns! Sua solicitação para participar da organização '" + request.getOrganizer().getName() + "' foi aceita. Você agora é um organizador. Faça login novamente para poder cadastrar eventos!");
             notif.setType("APPROVED");
             notif.setRead(false);
             notif.setCreatedAt(LocalDateTime.now());
